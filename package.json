@@ -10,6 +10,10 @@
   "keywords": [
     "immutability"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dallian/immutableql.git"
+  },
   "license": "MIT",
   "devDependencies": {
     "deepcopy": "^0.6.3",

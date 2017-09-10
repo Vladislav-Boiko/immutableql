@@ -5,6 +5,13 @@ Immutableql allows CRUD operations over JS objects (and arrays) at any depth in 
 
 The library was inspired by the [immutability-helper](https://github.com/kolodny/immutability-helper) project, and tried to tackle the complexity of its syntax when dealing with huge object trees alike the ones one can face working with redux. Although, it is not limited to be used with redux, *immutableql* was written with it in mind.
 
+## Installation
+```js
+yarn add immutableql
+// OR
+npm i immutableql
+```
+
 ## Enough talk, show me some code!
 
 In a nutshell, there is an *evolve* function that in combination with a few other helper functions, provides a mechanism to describe in a human readable way what changes to an object should be made like this:

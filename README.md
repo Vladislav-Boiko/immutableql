@@ -8,7 +8,7 @@ The library was inspired by the [immutability-helper](https://github.com/kolodny
 ## Installation
 ```js
 yarn add immutableql
-// OR
+# OR
 npm i immutableql
 ```
 

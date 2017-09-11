@@ -215,7 +215,7 @@ evolve([ 1, 2, 3, ], alter((key, value) => value.reduce((sum, e) => sum + e), 0)
 ```
 
 ### merge statement
-**merge(to_merge_with: any, not_override: boolean)**
+**merge(to_merge_with: any, not_override: boolean, join_reason: function | object)**
 
 Sometimes it is wanted to merge some objects, and not to declare all the necessary modifications through key-value changes pairs. The merge function combines two given objects, either overriding the duplicated values or not. Though one can determine what exact behavior to follow when keys coincide (using alter function, it is possible to define any type of values evolution while objects merge.)
 
@@ -241,4 +241,16 @@ evolve(original, changes);
 
 // Result: 
 // -> { id: 1, balance: 7, visits: 3, purchases: 6, }
+```
+
+<!-- Often we need to merge arrays (or even objects), that store objects to be merged at different indexies (properits), then one can parametrrize the merge, by telling what fields should match for the merge to appear, or even pass a function that will determine the conditions for merge. If you provide a joining object as in the exmple below, you shall set the fields of that object (can be nested) to true at the positions that shall match:
+```js
+import { evolve, merge, } from 'immutableql';
+const shopping_cart = [ { id: 1, amount: 1, }, { id: 2, amount: 2, }, ];
+const added = [ { id: 2, amount: 1 }, { id: 3, amount: 3, }, ];
+evolve(shopping_cart, {
+  [merge(added, true, { id: true, })]: {
+    amount: alter((key, was) => (was || 0) + (added[key] || 0)),
+  },
+}); -->
 ```

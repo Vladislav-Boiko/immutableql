@@ -73,6 +73,33 @@ const compareArrays = (first, second) => {
   return true;
 };
 
+const isSubtree = (root1, root2) => {
+  for (let key of getAllKeys(root2)) {
+    if (!root1[key]) {
+      return false;
+    }
+    if (!compareObjects(root1[key], root2[key])) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const subtreesMatch = (root1, root2, subtree) => {
+  for (let key of getAllKeys(subtree)) {
+    if (subtree[key] === true) {
+      return compareObjects(root1[key], root2[key]);
+    }
+    if (!root1[key] || !root2[key]) {
+      return false;
+    }
+    if (!subtreesMatch(root1[key], root2[key])) {
+      return false;
+    }
+  }
+  return true;
+};
+
 const immutableql = () => {
   let current_pointer = 0;
   let calls_table = {};
@@ -84,23 +111,11 @@ const immutableql = () => {
     return new_pointer;
   };
 
-  const isSubtree = (root1, root2) => {
-    for (let key of getAllKeys(root2)) {
-      if (!root1[key]) {
-        return false;
-      }
-      if (!compareObjects(root1[key], root2[key])) {
-        return false;
-      }
-    }
-    return true;
-  };
-
   const whereRoutine = (keys, value, callback, is_value) => {
     if (callback === true) {
       callback = () => true;
     }
-    if (typeof callback === 'object') {
+    if (typeof callback !== 'function') {
       const accessors_tree = copy(callback);
       callback = (key) => isSubtree(value[key], copy(accessors_tree));
     }
@@ -118,15 +133,36 @@ const immutableql = () => {
 
   const alterRoutine = (key, value, callback) => callback(key, value);
 
-  const mergeRoutine = (keys, value, { array, not_override, }, is_value) =>  {
-    value = not_override ?  assign(copy(array), value) : assign(value, array);
+  const mergeRoutine = (keys, value, { array, not_override, join_tree, }, is_value) =>  {
+    let values = [];
+    if (join_tree) {
+      for (let merging_key of getAllKeys(array)) {
+        let merged = false;
+        for (let key of getAllKeys(value)) {
+          if (typeof join_tree === 'function' ? join_tree(value[key], array[merging_key]) : subtreesMatch(value[key], array[merging_key], join_tree)) {
+            value[key] = not_override ? assign(copy(array[merging_key]), value[key]) : assign(copy(value[key]), array[merging_key]);
+            merged = true;
+            break;
+          }
+        }
+        if (!merged) {
+          if (value instanceof Array) {
+            value.push(array[merging_key]);
+          } else {
+            value[merging_key] = copy(array[merging_key]);
+          }
+        }
+      }
+    } else {
+      value = not_override ? assign(copy(array), value) : assign(value, array);
+    }
     return is_value ? value : getAllKeys(value);
   };
 
   const where = (callback) => addCall({ callback, call: whereRoutine, });
   const spread = (array, is_soft) => addCall({ callback: { array, is_soft, }, call: spreadRoutine, });
   const alter = (callback) => addCall({ callback, call: alterRoutine, });
-  const merge = (array, not_override) => addCall({ callback: { array, not_override, }, call: mergeRoutine, });
+  const merge = (array, not_override, join_tree) => addCall({ callback: { array, not_override, join_tree, }, call: mergeRoutine, });
 
   const evolve_value = (value, change, key) => {
     const routine = calls_table[change];

@@ -7,7 +7,12 @@ const { evolve, where, spread, alter, merge, } = require('./');
 const evolve_wrap = (original, changes) => {
   const stay_unchanged = deepcopy(original);
   const changed = evolve(original, changes);
-  expect(original).toEqual(stay_unchanged);
+  try {
+    expect(original).toEqual(stay_unchanged);
+  } catch(e) {
+    console.log(`FATAL!! mutated original object`);
+    console.error(e);
+  }
   return changed;
 };
 
@@ -56,9 +61,15 @@ describe('where', () => {
 
   it(`can where values`,
     () => expect(evolve_wrap({ a: 1, b: 2, c: 3, }, where((key, value) => value > 1))).toEqual({ b: 2, c: 3, })); 
+  
+  it(`can where values by inner parameter`,
+    () => expect(evolve_wrap({ a: 1, b: 2, c: 3, }, where(1))).toEqual({ a: 1, b: 2, c: 3, })); 
 
   it(`can where arrays`,
     () => expect(evolve_wrap([ { a: 1, }, { a: 2, }, { a: 3, }, ], where((key, value) => value.a > 2))).toEqual([ { a: 3, }, ]));
+
+  it(`can where arrays by inner parameter`,
+    () => expect(evolve_wrap([ { a: 1, }, { a: 2, }, { a: 3, }, ], where({ a: 3, }))).toEqual([ { a: 3, }, ]));
 
   it(`cat where netsted arrays`,
     () => expect(evolve_wrap({ a: [ { b: 1, }, { b: 2 }, ], }, 
@@ -146,6 +157,31 @@ describe(`merge`, () => {
 
   it(`can merge without override`,
     () => expect(evolve_wrap({ a: 1, b: 2, c: 3, }, merge({ a: 3, b: 3, }, true))).toEqual({ a: 1, b: 2, c: 3, }));
+  
+  it(`can merge based on an object`,
+    () => expect(evolve_wrap(
+      [ { id: 1, a: 1, }, { id: 2, a: 2, }, { id: 3, a: 4, }, ], 
+      merge([ { id: 2, a: 3, }, ], false, { id: true, }))
+    ).toEqual([ { id: 1, a: 1, }, { id: 2, a: 3, }, { id: 3, a: 4, }, ]));
+  
+  it(`can merge based on a function`,
+    () => expect(evolve_wrap(
+      [ { id: 1, a: 1, }, { id: 2, a: 2, }, { id: 3, a: 4, }, ], 
+      merge([ { id: 2, a: 3, }, ], false, (prev, next) => prev.id === next.id))
+    ).toEqual([ { id: 1, a: 1, }, { id: 2, a: 3, }, { id: 3, a: 4, }, ]));
+
+  it(`can do the test case from readme`, () => {
+    const shopping_cart = [ { id: 1, amount: 1, }, { id: 2, amount: 2, }, ];
+    const added = [ { id: 2, amount: 1 }, { id: 3, amount: 3, }, ];
+    expect(evolve_wrap(shopping_cart, {
+      [merge(added, true, { id: true, })]: 
+        alter((key, value) => {
+          const { id, } = value;
+          // const adding_amount = (evolve(added, where({ id: value.id, }))[0] || { amount: 0, }).amount;
+          return 1;
+        }),
+    })).toEqual([ { id: 1, amount: 1, }, { id: 2, amount: 3, }, { id: 3, amount: 3, }, ]);
+  });
 });
 
 describe('nesting capabilities', () => {

@@ -89,7 +89,7 @@ describe('spread', () => {
     () => expect(evolve_wrap([], { [spread([ 0, 3, 4, ])]: 1, })).toEqual([ 1,,,1,1, ]));
 
   it(`can soft spread arrays by index`, 
-    () => expect(evolve_wrap([ 7, 7, 7, ], { [spread([ 0, 3, 4, ], true)]: 1, })).toEqual([ 1,7,7,1,1, ]))
+    () => expect(evolve_wrap([ 7, 7, 7, ], { [spread([ 0, 3, 4, ], true)]: 1, })).toEqual([ 1, 7, 7, 1, 1, ]))
 
 });
 

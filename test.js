@@ -66,7 +66,25 @@ describe('where', () => {
         [where((key, value) => value.b > 1)]:
           { c: 3, }
         },
-      })).toEqual({ a: [ { b: 1, }, { b: 2, c: 3 }, ], }));
+    })).toEqual({ a: [ { b: 1, }, { b: 2, c: 3 }, ], }));
+
+  it(`can take objects as input (sugar)`,
+    () => expect(evolve_wrap([{ a: 1, b: 2, }, { a: 3, b: 4, }, ], { [where({ a: 1, })]: { b: 5, }, })).toEqual([ { a: 1, b: 5, }, { a: 3, b: 4, } ]));
+  
+  it(`can take nested objects as input (sugar)`,
+    () => expect(evolve_wrap([{ a: { c: 6, }, b: 2, e: 7, }, { a: 3, b: 4, }, ], { [where({ a: { c: 6, }, e: 7, })]: { b: 5, }, })).toEqual([{ a: { c: 6, }, b: 5, e: 7, }, { a: 3, b: 4, }, ]));
+  
+  it(`can take nested objects-arrays as input (sugar)`,
+    () => expect(evolve_wrap([{ a: { c: 6, }, b: 2, e: [ 1, [ 2, { f: 8, }, ], ], }, { a: 3, b: 4, }, ], { [where({ a: { c: 6, }, e: [ 1, [ 2, { f: 8, }, ], ], })]: { b: 5, }, })).toEqual([{ a: { c: 6, }, b: 5, e: [ 1, [ 2, { f: 8, }, ], ], }, { a: 3, b: 4, }, ]));
+
+  it(`can use true as a parameter (sugar)`,
+    () => expect(evolve_wrap({ a: 1, b: 2, c: 3, }, { [where(true)]: 5, })).toEqual({ a: 5, b: 5, c: 5, }));
+
+  it(`can fullfil the scenario from readme`, 
+    () =>  {
+      const users = [ { id: 1, is_online: false, }, { id: 2, is_online: true, }, { id: 3, is_online: false, }];
+      expect(evolve_wrap(users, { [where({ id: 2, })]: { is_online: false, } })).toEqual([ { id: 1, is_online: false, }, { id: 2, is_online: false, }, { id: 3, is_online: false, }]);
+    });
 });
 
 describe('spread', () => {

@@ -19,6 +19,7 @@
 # linters
 .eslint
 .eslintrc
+.eslintrc.json
 .prettierrc
 
 # Logs

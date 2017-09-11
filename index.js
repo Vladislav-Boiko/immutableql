@@ -36,6 +36,43 @@ const copySubset = (object, fields_subset) => {
 
 const isLiteral = (value) => typeof value !== 'object' || value === null || value instanceof Array;
 
+const compareObjects = (first, second) => {
+  if (typeof first !== typeof second) {
+    return false;
+  }
+  if (typeof first !== 'object' || typeof second !== 'object') {
+    if (!(first instanceof Array && second instanceof Array)) {
+      return first === second;
+    } else {
+      return compareArrays(first, second);
+    }
+  }
+  const keys = new Set([ ...getAllKeys(first), ...getAllKeys(second), ]);
+  for (let key of keys) {
+    if (!compareObjects(first[key], second[key])) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const compareArrays = (first, second) => {
+  if (!first || !second || !(first instanceof Array) || !(second instanceof Array) || first.length !== second.length) {
+    return false;
+  }
+  for (let i in first) {
+    if (first[i] instanceof Array && second[i] instanceof Array) {
+      if (!compareArrays(first[i], second[i])) {
+        return false;
+      }
+    }
+    if (!compareObjects(first[i], seocnd[i])) {
+      return false;
+    }
+  }
+  return true;
+};
+
 const immutableql = () => {
   let current_pointer = 0;
   let calls_table = {};
@@ -47,7 +84,26 @@ const immutableql = () => {
     return new_pointer;
   };
 
+  const isSubtree = (root1, root2) => {
+    for (let key of getAllKeys(root2)) {
+      if (!root1[key]) {
+        return false;
+      }
+      if (!compareObjects(root1[key], root2[key])) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   const whereRoutine = (keys, value, callback, is_value) => {
+    if (callback === true) {
+      callback = () => true;
+    }
+    if (typeof callback === 'object') {
+      const accessors_tree = copy(callback);
+      callback = (key) => isSubtree(value[key], copy(accessors_tree));
+    }
     const new_keys = is_value ? getAllKeys(value) : keys;
     const filtered = new_keys.filter((key) => callback(key, value[key]));
     return is_value ? copySubset(value, filtered) : filtered;

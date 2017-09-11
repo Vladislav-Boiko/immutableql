@@ -48,12 +48,12 @@ const new_object = evolve(original_object, changes);
 
 ```js
 import { evolve, } from 'immutableql';
-const to_chagne = { a: 1, b: 2, };
-const changed = evolve(to_change, { a: 2, });
+const user = { id: 1, name: 'Admin', };
+const changed = evolve(user, { name: 'root', });
 
 // Result:
-// -> to_chnage = { a: 1, b: 2, }
-// -> changed = { a: 2, b: 2, }
+// -> user = { id: 1, name: 'Admin', }
+// -> changed = { id: 1, name: 'root', }
 ```
 
 Or in  case of requirejs environment one can as well:
@@ -67,15 +67,15 @@ In fact, it is possible to replace values under given keys with arbitrary data (
 
 ```js
 import { evolve, } from 'immutableql';
-const to_chagne = { a: 1, b: 2, };
-const changed = evolve(to_change, { a: { b: { c: 2, }, }, });
+const user = { id: 10, permissions: null, }; // one might as well completely omit the "permissions" property declaration
+const changed = evolve(user, { permissions: { groups: { tasks: 'read', }, }, });
 
 // Result:
-// -> to_chnage = { a: 1, b: 2, }
-// -> changed = { a: { b: { c: 2, }, }, b: 2, }
+// -> to_chnage = { id: 10, permissions: null, }
+// -> changed = { id: 10, { permissions: { groups: { tasks: 'read', }, }, }, }
 ```
 
-One can also evolve arrays at a given index, same as objects:
+Same way arrays can be evolved at a given index:
 ```js
 import { evolve, } from 'immutableql';
 const changed = evolve([ 1, 2, ], { 0: 3, 1: 4, });
@@ -86,8 +86,31 @@ const changed = evolve([ 1, 2, ], { 0: 3, 1: 4, });
 
 ### where statement
 **where(callback:([key: string | number, value: any]) => boolean)**
+**where(object)**
+**where(boolean)**
 
-It is cool to modify objects by a given path maintaining immutability, but it would not be enough for complex dynamic objects' updates, so one might need a *where* function to dynamically signify which keys should be changed:
+It is cool to modify objects by a given path maintaining immutability, but it would not be enough for complex dynamic objects' updates, so one might need a *where* function to dynamically signify which keys should be changed. For simple use-cases, one can pass an object to the where function that will describe a tree to be matched at a given property for the change to fire:
+```js
+import { evolve, where, } from 'immutableql';
+const users = [ { id: 1, is_online: false, }, { id: 2, is_online: true, }, { id: 3, is_online: false, }];
+evolve(users, { [where({ id: 2, })]: { is_online: false, } });
+
+// Result:
+// -> [ { id: 1, is_online: false, }, { id: 2, is_online: false, }, { id: 3, is_online: false, }]
+```
+You might nest such requests as deep as you want, i.e. you can pass complex objects to the where function as input (arrays will be also matched against.)
+
+Sometimes you do want to modify all keys (especially in arrays), for some particular use-cases, for that you can simply use *where(true)*:
+```js
+import { evolve, where, } from 'immutableql';
+const users = [ { id: 1, is_online: false, }, { id: 2, is_online: true, }, { id: 3, is_online: false, }];
+evolve(users, { [where(true)]: { is_online: true, } });
+
+// Result:
+// -> [ { id: 1, is_online: true, }, { id: 2, is_online: true, }, { id: 3, is_online: true, }]
+```
+
+For more complicated cases it is possible to pass a function to the where routine that will determine weather a change should take place under a given property or not.
 ```js
 import { evolve, where, } from 'immutableql';
 const to_chagne = { a: 1, b: 2, c: 3, };
@@ -115,7 +138,6 @@ evolve(to_chagne, where((key, value) => value > 1));
 // -> { b: 2, c: 3, }
 ```
 
-
 ### spread statement
 **spread(keys: array, not_override: boolean)**
 
@@ -124,19 +146,19 @@ It would not have been enough if it was only possible to narrow the set of keys 
 Simply adding new keys:
 ```js
 import { evolve, spread, } from 'immutableql';
-evolve({ a: 1, }, { [spread([ 'b', 'c', ])]: null, });
+evolve({ id: 10, }, { [spread([ 'visits', 'balance', ])]: 0, });
 
 // Result:
-// -> { a: 1, b: null, c: null, }
+// -> { id: 10, visits: 0, balance: 0, }
 ```
 
 By default the function overrides the initial values under the spread keys with provided data. If one wants to add keys without overriding the respective values already present, the second parameter of *spread* function comes to help:
 ```js
 import { evolve, spread, } from 'immutableql';
-evolve({ a: 1, }, { [spread([ 'a', 'b', ], true)]: 2, });
+evolve({ balance: 10, }, { [spread([ 'visits', 'balance', ], true)]: 0, });
 
 // Result:
-// -> { a: 1, b: 2, }
+// -> { visits: 0, balance: 0, }
 ```
 
 One can use this mechanism to add values to an array:
@@ -165,12 +187,12 @@ After we can select or add keys within js objects, one could like to modify the 
 At its simplest, the alter function just has to return a new value under the stated key:
 ```js
 import { evolve, alter, } from 'immutableql';
-evolve({}, alter((value) => ({ a: 1, })));
-evolve({ b: 10, }, { b: alter((key, value) => value + 1) });
+evolve({}, alter((value) => ({ name: 'root', })));
+evolve({ balance: 10, }, { balance: alter((key, value) => value + 1) });
 
 // Result:
-// -> { a: 1, }
-// -> { b: 11, }
+// -> { name: 'root', }
+// -> { balance: 11, }
 ```
 
 Especially it comes in handy for arrays alteration:
@@ -199,17 +221,17 @@ Sometimes it is wanted to merge some objects, and not to declare all the necessa
 
 ```js
 import { evolve, merge, } from 'immutableql';
-evolve({ a: 1, b: 2, }, merge({ b: 3, c: 3, }));
+evolve({ id: 1, balance: 2, }, merge({ balance: 3, visits: 3, }));
 
 // Result:
-// -> { a: 1, b: 3, c: 3, }
+// -> { id: 1, balance: 3, visits: 3, }
 ```
 
 Or with controlled override:
 ```js
 import { evolve, merge, alter, } from 'immutableql';
-const original = { a: 1, b: 2, c: 3, };
-const to_merge_with = { a: 4, b: 5, d: 6, };
+const original = { id: 1, balance: 2, visits: 3, };
+const to_merge_with = { balance: 5, purchases: 6, };
 const changes = { 
   [merge(to_merge_with, true)]: 
     alter((key, original_value) => (original_value || 0) + (to_merge_with[key] || 0)),
@@ -218,5 +240,5 @@ const changes = {
 evolve(original, changes);
 
 // Result: 
-// -> { a: 5, b: 7, c: 3, d: 6, }
+// -> { id: 1, balance: 7, visits: 3, purchases: 6, }
 ```

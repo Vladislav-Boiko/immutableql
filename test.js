@@ -59,6 +59,14 @@ describe('where', () => {
 
   it(`can where arrays`,
     () => expect(evolve_wrap([ { a: 1, }, { a: 2, }, { a: 3, }, ], where((key, value) => value.a > 2))).toEqual([ { a: 3, }, ]));
+
+  it(`cat where netsted arrays`,
+    () => expect(evolve_wrap({ a: [ { b: 1, }, { b: 2 }, ], }, 
+      { a: {
+        [where((key, value) => value.b > 1)]:
+          { c: 3, }
+        },
+      })).toEqual({ a: [ { b: 1, }, { b: 2, c: 3 }, ], }));
 });
 
 describe('spread', () => {

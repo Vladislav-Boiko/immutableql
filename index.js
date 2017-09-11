@@ -83,8 +83,8 @@ const immutableql = () => {
       const next_keys = routine ? routine.call(getAllKeys(value), value, routine.callback) : [ pointer, ];
       next_keys.forEach((key) => {
         const default_value = changes[pointer] instanceof Array ? [] : {};
-        const not_last_change = isLiteral(value[key]) && !isLiteral(changes[pointer]);
-        value[key] = recursively_evolve(not_last_change ? default_value : value[key], changes[pointer], key);
+        const is_not_last_change = isLiteral(value[key]) && !isLiteral(changes[pointer]) && typeof value[key] !== typeof default_value;
+        value[key] = recursively_evolve(is_not_last_change ? default_value : value[key], changes[pointer], key);
       });
     }
     return value;

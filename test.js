@@ -120,6 +120,9 @@ describe('spread', () => {
   it(`can soft spread arrays by index`,
     () => expect(evolve_wrap([ 7, 7, 7, ], { [spread([ 0, 3, 4, ], true)]: 1, })).toEqual([ 1, 7, 7, 1, 1, ]))
 
+  it(`can simply spread an object`,
+    () => expect(evolve_wrap({ a: 1, }, spread([ 'b', ]))).toEqual({ a: 1, b: undefined, }));
+
 });
 
 describe('alter', () => {
@@ -247,4 +250,17 @@ describe('nesting capabilities', () => {
         d: { f: 3, },
       }
     )).toEqual({ a: 1, b: 0, c: { e: 1, f: 2, }, d: { e: 1, f: 3, }, }));
+
+
+  // it(`can sequence via arrays`,
+  //   () => expect(evolve_wrap(
+  //     {
+  //       a: 1,
+  //     },
+  //     [
+  //       spread([ 'b', 'c', 'd', ]),
+  //       // { [where((key) => key > 'b')]: alter((key, value) => ({ e: value + 1, f: value + 2, })), },
+  //       // { d: { f: 3, }, },
+  //     ]
+  //   )).toEqual({ a: 1, b: 0, c: { e: 1, f: 2, }, d: { e: 1, f: 3, }, }));
 });

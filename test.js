@@ -252,15 +252,28 @@ describe('nesting capabilities', () => {
     )).toEqual({ a: 1, b: 0, c: { e: 1, f: 2, }, d: { e: 1, f: 3, }, }));
 
 
-  // it(`can sequence via arrays`,
-  //   () => expect(evolve_wrap(
-  //     {
-  //       a: 1,
-  //     },
-  //     [
-  //       spread([ 'b', 'c', 'd', ]),
-  //       // { [where((key) => key > 'b')]: alter((key, value) => ({ e: value + 1, f: value + 2, })), },
-  //       // { d: { f: 3, }, },
-  //     ]
-  //   )).toEqual({ a: 1, b: 0, c: { e: 1, f: 2, }, d: { e: 1, f: 3, }, }));
+  it(`can sequence via arrays`,
+    () => expect(evolve_wrap(
+      {
+        a: 1,
+      },
+      [
+        spread([ 'b', 'c', 'd', ]),
+        { [where((key) => key > 'b')]: alter((key, value) => ({ e: (value || 0) + 1, f: (value || 0) + 2, })), },
+        { d: { f: 3, }, },
+      ]
+    )).toEqual({ a: 1, b: undefined, c: { e: 1, f: 2, }, d: { e: 1, f: 3, }, }));
+
+  it(`can perform the example from readme`, () => {
+    const were_logged_in = [ { id: 1, last_seen: 1, session_reference: 'lorem', }, { id: 2, last_seen: 1, }, ];
+    const currently_logged_in = [ { id: 1, }, { id: 3, }, { id: 4, }, ];
+    const chagnes = [
+      merge(currently_logged_in, { id: true, }),
+      // say we want to store only currently logged in users
+      alter((key, value) => value.filter(({ fresh, }) => !!fresh)),
+      { [where(true)]: alter((key, { old, fresh, }) => Object.assign(old || {}, fresh || {}, { last_seen: 2, })), },
+    ];
+   const updated_logged_in = evolve_wrap(were_logged_in, chagnes);
+   expect(updated_logged_in).toEqual([ { id: 1, last_seen: 2, session_reference: 'lorem', }, { id: 3, last_seen: 2, }, { id: 4, last_seen: 2, }, ]);
+  });
 });

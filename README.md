@@ -30,7 +30,8 @@ const changes = {
   d: 4,
   // Add a key e, with value { f: 5, }
   e: { f: 5, },
-  // For all keys that are greater than d, access their f property (or add such if not present) and increment its value
+  // For all keys that are greater than d, access their f property (or add such if not present)
+  // and increment its value
   [where((key) => key > 'd')]: { f: alter((key, value) => (value || 0) + 1 ), },
 };
 const new_object = evolve(original_object, changes);
@@ -44,7 +45,7 @@ const new_object = evolve(original_object, changes);
 ## How does it work?
 
 ### creaton and simpliest changes
-**evolve(value: any, changes: any): any**
+**evolve(value: any, changes: object | array): any**
 
 ```js
 import { evolve, } from 'immutableql';
@@ -67,7 +68,8 @@ In fact, it is possible to replace values under given keys with arbitrary data (
 
 ```js
 import { evolve, } from 'immutableql';
-const user = { id: 10, permissions: null, }; // one might as well completely omit the "permissions" property declaration
+// one might as well completely omit the "permissions" property declaration
+const user = { id: 10, permissions: null, };
 const changed = evolve(user, { permissions: { groups: { tasks: 'read', }, }, });
 
 // Result:
@@ -217,8 +219,8 @@ evolve([ 1, 2, 3, ], alter((key, value) => value.reduce((sum, e) => sum + e), 0)
 ### merge statement
 **merge(to_merge_with: any, merge_condition: object | function)**
 
-Sometimes it is wanted to merge some objects, and not to declare all the necessary modifications through key-value pair changes. The merge function combines two given objects by a given condition and puts under the original key a new object containing the both merged ones ( { old: original_value, fresh: new_value, }), such that one can further specify the exact mergin behavior via alter function. If the merge condition is such, that there are some unmerged properties left in the object provided they will be put as { old: original_value, fresh: null, } under the old key, if this unmerged property belongs to the old object, or will be put as { old: null, fresh: new_value, } if they belonged to the merging object. In the second case the key is chosen as follows: if the key under which the value was present in the merging object is available it will be used, if not, and the object operated is an array, the merging object will be pushed in it, otherwise, the object is dropped (as it is not matching the merging condition anyway.)
-The second parameter of the merge function is same as the parameter of the where function
+Sometimes it is wanted to merge some objects, and not to declare all the necessary modifications through key-value pair changes. The merge function combines two given objects by a given condition and puts a new object under the original key containing both merged pieces ( { old: original_value, fresh: new_value, }), such that one can further specify the exact merging behavior via alter function. If the merge condition is such, that there are some unmerged properties left in the object provided they will be put as { old: original_value, fresh: null, } under the old key, if this unmerged property belongs to the old object, or will be put as { old: null, fresh: new_value, } if they belonged to the merging object. In the second case the key is chosen as follows: if the key under which the value was present in the merging object is available it will be used, if not, and the object operated is an array, the merging object will be pushed in it, otherwise, the object is dropped (as it is not matching the merging condition anyway.)
+The second parameter of the merge function is same as the parameter of the where function:
 
 ```js
 import { evolve, merge, } from 'immutableql';
@@ -231,16 +233,39 @@ evolve({ id: 1, balance: 2, }, {
 // -> { id: 1, balance: 5, visits: 3, }
 ```
 
-Often we need to merge arrays (or even objects), that store objects to be merged at different indexies (properits), then one can parametrrize the merge, by telling what fields should match for the merge to appear, or even pass a function that will determine the conditions for merge. If you provide a joining object as in the exmple below, you shall set the fields of that object (can be nested) to true at the positions that shall match:
+Often we need to merge arrays (or even objects), that store objects to be merged at different indexes (properits), then one can parameterize the merge, by telling what fields should match for the merge to appear, or even pass a function that will determine the conditions for merge. If you provide a joining object as in the example below, you shall set the fields of that object (can be nested) to true at the positions that shall match:
 ```js
 import { evolve, merge, } from 'immutableql';
 const shopping_cart = [ { id: 1, amount: 1, }, { id: 2, amount: 2, }, ];
 const added = [ { id: 2, amount: 1 }, { id: 3, amount: 3, }, ];
 evolve(shopping_cart, {
   [merge(added, { id: true, })]: 
-    alter((key, { old, fresh }) => Object.assign(old || {}, fresh || {}, { amount: (old ? old.amount : 0) + (fresh ? fresh.amount : 0) }))
+    alter((key, { old, fresh }) => 
+      Object.assign(old || {}, fresh || {}, { amount: (old ? old.amount : 0) + (fresh ? fresh.amount : 0) }))
 });
 
 // Result
 // -> [ { id: 1, amount: 1, }, { id: 2, amount: 3, }, { id: 3, amount: 3, }, ]
 ```
+### nesting requests
+ 
+ It is possible to nest changes requests by specifying different root changes in it such as:
+ ```js
+ const changes = { [where(true)]: { a: 1, }, [where({ id: 7, })]: { a: 2, }, };
+ ```
+
+ Or as well you can put them into an array, which is useful when you don't want to specify the values immediately after a change:
+ ```js
+ const were_logged_in = [ { id: 1, last_seen: Date.now(), session_reference: 'lorem', }, { id: 2, last_seen: Date.now(), }, ];
+ const currently_logged_in = [ { id: 1, }, { id: 3, }, { id: 4, }, ];
+ const chagnes = [
+   merge(currently_logged_in, { id: true, }),
+   // say we want to store only currently logged in users
+   alter((key, value) => value.filter(({ fresh, }) => !!fresh)),
+   { [where(true)]: alter((key, { old, fresh, }) => Object.assign(old || {}, fresh || {}, { last_seen: Date.now(), })), }
+ ];
+const updated_logged_in = evolve(were_logged_in, chagnes);
+
+// Result:
+// -> [ { id: 1, last_seen: now, session_reference: 'lorem', }, { id: 3, last_seen: now, }, { id: 4, last_seen: now, }, ]
+ ```

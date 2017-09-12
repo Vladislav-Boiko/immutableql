@@ -256,16 +256,23 @@ evolve(shopping_cart, {
 
  Or as well you can put them into an array, which is useful when you don't want to specify the values immediately after a change:
  ```js
- const were_logged_in = [ { id: 1, last_seen: Date.now(), session_reference: 'lorem', }, { id: 2, last_seen: Date.now(), }, ];
+ const were_logged_in = [ 
+   { id: 1, last_seen: Date.now(), session_reference: 'lorem', },
+   { id: 2, last_seen: Date.now(), },
+   ];
  const currently_logged_in = [ { id: 1, }, { id: 3, }, { id: 4, }, ];
  const chagnes = [
    merge(currently_logged_in, { id: true, }),
    // say we want to store only currently logged in users
    alter((key, value) => value.filter(({ fresh, }) => !!fresh)),
-   { [where(true)]: alter((key, { old, fresh, }) => Object.assign(old || {}, fresh || {}, { last_seen: Date.now(), })), }
+   { [where(true)]: 
+      alter((key, { old, fresh, }) => 
+        Object.assign(old || {}, fresh || {}, { last_seen: Date.now(), })), }
  ];
 const updated_logged_in = evolve(were_logged_in, chagnes);
 
 // Result:
-// -> [ { id: 1, last_seen: now, session_reference: 'lorem', }, { id: 3, last_seen: now, }, { id: 4, last_seen: now, }, ]
+// -> [ 
+//    { id: 1, last_seen: now, session_reference: 'lorem', }, 
+//    { id: 3, last_seen: now, }, { id: 4, last_seen: now, }, ]
  ```

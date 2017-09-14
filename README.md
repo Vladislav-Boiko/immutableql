@@ -88,7 +88,9 @@ const changed = evolve([ 1, 2, ], { 0: 3, 1: 4, });
 
 ### where statement
 **where(callback:([key: string | number, value: any]) => boolean)**
+\
 **where(object)**
+\
 **where(boolean)**
 
 It is cool to modify objects by a given path maintaining immutability, but it would not be enough for complex dynamic objects' updates, so one might need a *where* function to dynamically signify which keys should be changed. For simple use-cases, one can pass an object to the where function that will describe a tree to be matched at a given property for the change to fire:
@@ -279,8 +281,9 @@ const updated_logged_in = evolve(were_logged_in, chagnes);
  ```
 
  ### removeing items
-**remove(callback:([key: string | number, value: any]) => boolean)**
+**remove(callback:([key: string | number, value: any]) => boolean)** \
 **remove(object)**
+\
 **remove(boolean)**
 
 The remove funciton takes same parameters as the where funciton an operates in a very simillar way. It sets the 'whered' values to nulls if called on a property value position, or removes the key from the final object if used on the key search position:

@@ -1,7 +1,7 @@
 const expect = require('expect');
 const deepcopy = require('deepcopy');
 
-const { evolve, where, spread, alter, merge, } = require('./');
+const { evolve, where, spread, alter, merge, remove, } = require('./');
 
 // For testing purposes checks that we didn't change the original object.
 const evolve_wrap = (original, changes) => {
@@ -71,7 +71,7 @@ describe('where', () => {
   it(`can where arrays by inner parameter`,
     () => expect(evolve_wrap([ { a: 1, }, { a: 2, }, { a: 3, }, ], where({ a: 3, }))).toEqual([ { a: 3, }, ]));
 
-  it(`cat where netsted arrays`,
+  it(`can where netsted arrays`,
     () => expect(evolve_wrap({ a: [ { b: 1, }, { b: 2, }, ], },
       { a: {
         [where((key, value) => value.b > 1)]:
@@ -276,4 +276,27 @@ describe('nesting capabilities', () => {
    const updated_logged_in = evolve_wrap(were_logged_in, chagnes);
    expect(updated_logged_in).toEqual([ { id: 1, last_seen: 2, session_reference: 'lorem', }, { id: 3, last_seen: 2, }, { id: 4, last_seen: 2, }, ]);
   });
+});
+
+describe('remove routine', () => {
+  it(`can perform simple remove`,
+    () => expect(evolve_wrap({ a: 1, }, remove())).toEqual(null));
+
+  it(`can perform simple remove by a key`,
+    () => expect(evolve_wrap({ a: 1, }, { [where(1)]: remove(), })).toEqual({ a: null, }));
+
+  it(`can perform simple remove in an object`,
+    () => expect(evolve_wrap({ a1: { b: 1, }, a2: { b: 2, }, }, { [where({ b: 1, })]: remove(), })).toEqual({ a1: null, a2: { b: 2, }, }));
+
+  it(`can perform simple remove in an object`,
+    () => expect(evolve_wrap({ a1: { b: 1, }, a2: { b: 2, }, }, remove({ b: 1, }))).toEqual({ a2: { b: 2, }, }));
+
+  it(`can remove all`,
+    () => expect(evolve_wrap({ a1: { b: 1, }, a2: { b: 2, }, }, remove(true))).toEqual({ }));
+
+  it(`can remove in an array`,
+    () => expect(evolve_wrap([ { b: 1, }, { b: 2, }, ], remove({ b: 1, }))).toEqual([ { b: 2, }, ]));
+
+  it(`can remove in an array by index`,
+    () => expect(evolve_wrap([ { b: 1, }, { b: 2, }, ], [ { 0: remove(), }, where((key, value) => !!value), ])).toEqual([ { b: 2, }, ]));
 });

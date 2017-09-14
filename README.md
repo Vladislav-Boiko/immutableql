@@ -226,7 +226,7 @@ The second parameter of the merge function is same as the parameter of the where
 import { evolve, merge, } from 'immutableql';
 evolve({ id: 1, balance: 2, }, {
   [merge({ balance: 3, visits: 3, })]:
-    alter((key, { old, fresh, }) => Object.assign(old, fresh, { balance: old.balance + fresh.balance, }))
+    alter((key, { old, fresh, }) => Object.assign(old, fresh, { balance: old.balance + fresh.balance, })),
 });
 
 // Result:
@@ -241,7 +241,7 @@ const added = [ { id: 2, amount: 1 }, { id: 3, amount: 3, }, ];
 evolve(shopping_cart, {
   [merge(added, { id: true, })]: 
     alter((key, { old, fresh }) => 
-      Object.assign(old || {}, fresh || {}, { amount: (old ? old.amount : 0) + (fresh ? fresh.amount : 0) }))
+      Object.assign(old || {}, fresh || {}, { amount: (old ? old.amount : 0) + (fresh ? fresh.amount : 0) })),
 });
 
 // Result
@@ -256,19 +256,20 @@ evolve(shopping_cart, {
 
  Or as well you can put them into an array, which is useful when you don't want to specify the values immediately after a change:
  ```js
- const were_logged_in = [ 
-   { id: 1, last_seen: Date.now(), session_reference: 'lorem', },
-   { id: 2, last_seen: Date.now(), },
-   ];
- const currently_logged_in = [ { id: 1, }, { id: 3, }, { id: 4, }, ];
- const chagnes = [
-   merge(currently_logged_in, { id: true, }),
-   // say we want to store only currently logged in users
-   alter((key, value) => value.filter(({ fresh, }) => !!fresh)),
-   { [where(true)]: 
-      alter((key, { old, fresh, }) => 
-        Object.assign(old || {}, fresh || {}, { last_seen: Date.now(), })), }
- ];
+import { evolve, merge, } from 'immutableql';
+const were_logged_in = [ 
+  { id: 1, last_seen: Date.now(), session_reference: 'lorem', },
+  { id: 2, last_seen: Date.now(), },
+  ];
+const currently_logged_in = [ { id: 1, }, { id: 3, }, { id: 4, }, ];
+const chagnes = [
+  merge(currently_logged_in, { id: true, }),
+  // say we want to store only currently logged in users
+  alter((key, value) => value.filter(({ fresh, }) => !!fresh)),
+  { [where(true)]: 
+    alter((key, { old, fresh, }) => 
+      Object.assign(old || {}, fresh || {}, { last_seen: Date.now(), })), }
+];
 const updated_logged_in = evolve(were_logged_in, chagnes);
 
 // Result:
@@ -276,3 +277,19 @@ const updated_logged_in = evolve(were_logged_in, chagnes);
 //    { id: 1, last_seen: now, session_reference: 'lorem', }, 
 //    { id: 3, last_seen: now, }, { id: 4, last_seen: now, }, ]
  ```
+
+ ### removeing items
+**remove(callback:([key: string | number, value: any]) => boolean)**
+**remove(object)**
+**remove(boolean)**
+
+The remove funciton takes same parameters as the where funciton an operates in a very simillar way. It sets the 'whered' values to nulls if called on a property value position, or removes the key from the final object if used on the key search position:
+
+```js
+import { evolve, remove, } from 'immutableql';
+evolve({ a1: { b: 1, }, a2: { b: 2, }, }, { [where({ b: 1, })]: remove(), }); // { a1: null, a2: { b: 2, }, }
+evolve({ a1: { b: 1, }, a2: { b: 2, }, }, remove({ b: 1, }));                 // { a2: { b: 2, }, }
+evolve([ { b: 1, }, { b: 2, }, ], remove({ b: 1, }));                         // [ { b: 2, }, ]
+evolve([ { b: 1, }, { b: 2, }, ], { 0: remove(), });                          // [ null, { b: 2, }, ]
+
+```

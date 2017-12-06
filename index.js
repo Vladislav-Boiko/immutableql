@@ -1,3 +1,1 @@
-const immutableql = require('./lib');
-
-module.exports = immutableql;
+module.exports = require('./lib');

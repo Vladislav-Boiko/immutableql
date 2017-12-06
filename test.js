@@ -123,6 +123,9 @@ describe('spread', () => {
   it(`can simply spread an object`,
     () => expect(evolve_wrap({ a: 1, }, spread([ 'b', ]))).toEqual({ a: 1, b: undefined, }));
 
+  it(`can spread on array as a property`, 
+    () => expect(evolve_wrap({ a: [ 1, 2, 3, ], }, { a: spread([ 'b', ]), })).toEqual({ a: [ 1, 2, 3, 'b', ], }));
+
 });
 
 describe('alter', () => {

@@ -44,7 +44,7 @@ const new_object = evolve(original_object, changes);
 
 ## How does it work?
 
-### creaton and simpliest changes
+### creation and simpliest changes
 **evolve(value: any, changes: object | array): any**
 
 ```js
@@ -117,7 +117,7 @@ evolve(users, { [where(true)]: { is_online: true, } });
 For more complicated cases it is possible to pass a function to the where routine that will determine weather a change should take place under a given property or not.
 ```js
 import { evolve, where, } from 'immutableql';
-const to_chagne = { a: 1, b: 2, c: 3, };
+const to_change = { a: 1, b: 2, c: 3, };
 evolve(to_change, { [where((key) => key > 'a')]: 4, });
 evolve(to_change, { [where((key, value) => value < 3)]: 4, });
 
@@ -135,8 +135,8 @@ It is also possible to only select data, without modificaiton:
 expect(evolve_wrap({ a: 1, b: 2, c: 3, }, where((key, value) => value > 1))).toEqual({ b: 2, c: 3, })); 
 ```js
 import { evolve, where, } from 'immutableql';
-const to_chagne = { a: 1, b: 2, c: 3, };
-evolve(to_chagne, where((key, value) => value > 1));
+const to_change = { a: 1, b: 2, c: 3, };
+evolve(to_change, where((key, value) => value > 1));
 
 // Result:
 // -> { b: 2, c: 3, }
@@ -186,7 +186,7 @@ evolve_wrap([ 7, ], { [spread([ 0, 3, 4, ])]: 1, });
 ### alter statement
 **alter(key: any, vlaue: any)**
 
-After we can select or add keys within js objects, one could like to modify the values under these keys in various ways, hence the alter funcion.
+After we can select or add keys within js objects, one could like to modify the values under these keys in various ways, hence the alter function.
 
 At its simplest, the alter function just has to return a new value under the stated key:
 ```js
@@ -235,7 +235,7 @@ evolve({ id: 1, balance: 2, }, {
 // -> { id: 1, balance: 5, visits: 3, }
 ```
 
-Often we need to merge arrays (or even objects), that store objects to be merged at different indexes (properits), then one can parameterize the merge, by telling what fields should match for the merge to appear, or even pass a function that will determine the conditions for merge. If you provide a joining object as in the example below, you shall set the fields of that object (can be nested) to true at the positions that shall match:
+Often we need to merge arrays (or even objects), that store objects to be merged at different indexes (properties), then one can parameterize the merge, by telling what fields should match for the merge to appear, or even pass a function that will determine the conditions for merge. If you provide a joining object as in the example below, you shall set the fields of that object (can be nested) to true at the positions that shall match:
 ```js
 import { evolve, merge, } from 'immutableql';
 const shopping_cart = [ { id: 1, amount: 1, }, { id: 2, amount: 2, }, ];
@@ -264,7 +264,7 @@ const were_logged_in = [
   { id: 2, last_seen: Date.now(), },
   ];
 const currently_logged_in = [ { id: 1, }, { id: 3, }, { id: 4, }, ];
-const chagnes = [
+const changes = [
   merge(currently_logged_in, { id: true, }),
   // say we want to store only currently logged in users
   alter((key, value) => value.filter(({ fresh, }) => !!fresh)),
@@ -272,7 +272,7 @@ const chagnes = [
     alter((key, { old, fresh, }) => 
       Object.assign(old || {}, fresh || {}, { last_seen: Date.now(), })), }
 ];
-const updated_logged_in = evolve(were_logged_in, chagnes);
+const updated_logged_in = evolve(were_logged_in, changes);
 
 // Result:
 // -> [ 
@@ -280,13 +280,13 @@ const updated_logged_in = evolve(were_logged_in, chagnes);
 //    { id: 3, last_seen: now, }, { id: 4, last_seen: now, }, ]
  ```
 
- ### removeing items
+ ### removing items
 **remove(callback:([key: string | number, value: any]) => boolean)** \
 **remove(object)**
 \
 **remove(boolean)**
 
-The remove funciton takes same parameters as the where funciton an operates in a very simillar way. It sets the 'whered' values to nulls if called on a property value position, or removes the key from the final object if used on the key search position:
+The remove funciton takes same parameters as the where function an operates in a very similar way. It sets the 'whered' values to nulls if called on a property value position, or removes the key from the final object if used on the key search position:
 
 ```js
 import { evolve, remove, } from 'immutableql';

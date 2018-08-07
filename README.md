@@ -286,7 +286,7 @@ const updated_logged_in = evolve(were_logged_in, changes);
 \
 **remove(boolean)**
 
-The remove funciton takes same parameters as the where function an operates in a very similar way. It sets the 'whered' values to nulls if called on a property value position, or removes the key from the final object if used on the key search position:
+The remove function takes same parameters as the where function an operates in a very similar way. It sets the 'whered' values to nulls if called on a property value position, or removes the key from the final object if used on the key search position:
 
 ```js
 import { evolve, remove, } from 'immutableql';

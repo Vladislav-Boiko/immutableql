@@ -91,3 +91,5 @@ Temporary Items
 uploads/*
 
 .vscode
+
+package-lock.json
